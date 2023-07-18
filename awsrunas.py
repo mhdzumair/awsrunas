@@ -10,10 +10,6 @@ from dateutil import parser as date_parser
  
  
 def runas(profile, options):
-    if not path.exists(path.expanduser("~/.aws/.aws_runas.cookies")):
-        print("aws-runas cookies file not found. run 'aws-runas' command to initialize authentication.")
-        raise SystemExit(1)
-    
     try:
         shell_response = subprocess.run(["aws-runas", "-O", "json", *options, profile], capture_output=True)
     except FileNotFoundError:
@@ -30,7 +26,6 @@ def runas(profile, options):
 def parse_credential(credential, to_env=False):
     expiration = credential["Expiration"]
     remaining_time = date_parser.parse(expiration) - datetime.now(tz=timezone.utc)
-    print(f"session remaining time: {remaining_time}")
     key_id = credential['AccessKeyId']
     access_key = credential['SecretAccessKey']
     security_key = credential['SessionToken']
@@ -45,6 +40,7 @@ export AWS_SECURITY_TOKEN="{security_key}"''')
 aws_access_key_id={key_id}
 aws_secret_access_key={access_key}
 aws_security_token={security_key}""")
+        print(f"aws credentials stored to ~/.aws/credentials. session remaining time: {remaining_time}")
  
  
 if __name__ == '__main__':
