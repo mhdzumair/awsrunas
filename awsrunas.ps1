@@ -60,13 +60,11 @@ function Parse-Credential {
         Write-Output "export AWS_SECURITY_TOKEN=`"$securityKey`""
     }
     else {
-        $credentialsPath = "$env:USERPROFILE\.aws\credentials"
-        if ($IsLinux -or $IsMacOS) {
-            $credentialsPath = "$env:HOME/.aws/credentials"
-        }
+        # Use proper Windows path separators
+        $awsDir = Join-Path $env:USERPROFILE ".aws"
+        $credentialsPath = Join-Path $awsDir "credentials"
         
         # Ensure .aws directory exists
-        $awsDir = Split-Path -Parent $credentialsPath
         if (!(Test-Path $awsDir)) {
             New-Item -ItemType Directory -Path $awsDir -Force | Out-Null
         }
@@ -75,10 +73,13 @@ function Parse-Credential {
 [default]
 aws_access_key_id=$keyId
 aws_secret_access_key=$accessKey
-aws_security_token=$securityKey
+aws_session_token=$securityKey
 "@
         
-        $credentialsContent | Out-File -FilePath $credentialsPath -Encoding utf8
+        # Write without BOM using UTF8NoBomEncoding
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::WriteAllText($credentialsPath, $credentialsContent, $utf8NoBom)
+        
         Write-Output "AWS credentials stored to $credentialsPath. Session remaining time: $remainingTime"
     }
 }
