@@ -1,176 +1,119 @@
 # awsrunas
 
-AWS-runas utility scripts to parse & setup AWS credentials. Available in Python, PowerShell, and Bash to make your life easier across different platforms! :sunglasses:
+AWS-runas utility scripts to parse & setup AWS credentials. Choose your platform! :sunglasses:
 
 ## Requirements
 
 - Setup [aws-runas](https://mmmorris1975.github.io/aws-runas/quickstart.html)
-- **For Bash version**: `jq` command-line JSON processor
-  ```bash
-  # Ubuntu/Debian
-  sudo apt install jq
-  # macOS
-  brew install jq
-  # RHEL/CentOS/Fedora
-  sudo yum install jq  # or dnf install jq
-  ```
-- **For Python version**: `python-dateutil` package
-  ```bash
-  pip install python-dateutil
-  ```
+- **Windows**: PowerShell 5.1+ (built-in on Windows 10+)
+- **Linux/macOS**: `jq` package (`sudo apt install jq` or `brew install jq`)
+- **All platforms**: Python 3.6+ (optional, uses built-in libraries only)
 
-## Setup
+## Quick Setup
 
-```bash
-git clone https://github.com/mhdzumair/awsrunas.git
-cd awsrunas
-```
-
-### Choose Your Preferred Version
-
-#### Option 1: Python Script (Original)
-```bash
-# Make executable and symlink to local bin
-chmod +x awsrunas.py
-ln -s $(pwd)/awsrunas.py ~/.local/bin/awsrunas
-```
-
-#### Option 2: PowerShell Script (Cross-platform)
-```bash
-# Make executable
-chmod +x awsrunas.ps1
-
-# Create wrapper script for easier usage
-cat > ~/.local/bin/awsrunas << 'EOF'
-#!/bin/bash
-pwsh "$(dirname "$(readlink -f "$0")")/../path/to/awsrunas.ps1" "$@"
-EOF
-chmod +x ~/.local/bin/awsrunas
-```
-
-Or use directly:
+### Windows (PowerShell)
 ```powershell
-# Windows PowerShell
+# Download script
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/mhdzumair/awsrunas/main/awsrunas.ps1" -OutFile "awsrunas.ps1"
+
+# Allow script execution
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+# Ready to use!
+.\awsrunas.ps1 my-account
 ```
 
-#### Option 3: Bash Script (Linux/macOS)
+### Linux/macOS (Bash)
 ```bash
-# Make executable and symlink to local bin
+# Download and setup
+curl -o awsrunas.sh https://raw.githubusercontent.com/mhdzumair/awsrunas/main/awsrunas.sh
 chmod +x awsrunas.sh
-ln -s $(pwd)/awsrunas.sh ~/.local/bin/awsrunas
+
+# Ready to use!
+./awsrunas.sh my-account
+```
+
+### Python (All platforms)
+```bash
+# Download
+curl -o awsrunas.py https://raw.githubusercontent.com/mhdzumair/awsrunas/main/awsrunas.py
+# or
+wget https://raw.githubusercontent.com/mhdzumair/awsrunas/main/awsrunas.py
+
+# Make executable (Linux/macOS)
+chmod +x awsrunas.py
+
+# Ready to use!
+python3 awsrunas.py my-account
 ```
 
 ## Usage
 
-### Python Version
+All scripts have the same functionality:
+
 ```bash
-# See script help
-awsrunas -h
+# Store credentials to ~/.aws/credentials (or %USERPROFILE%\.aws\credentials on Windows)
+script my-account
 
-# Setup ~/.aws/credentials file
-awsrunas my-account
+# Export to environment variables
+script my-account -e    # or --env
 
-# Export to current shell environment  
-eval $(awsrunas -e my-account)
-
-# Run with aws-runas options
-awsrunas my-account -o "-a 8h -r"
+# Pass options to aws-runas
+script my-account -o "-a 8h -r"    # or --run-as-options
 ```
 
-### PowerShell Version
-```powershell
-# See script help
-./awsrunas.ps1 -?
+### Examples
 
-# Setup credentials file (~/.aws/credentials or %USERPROFILE%\.aws\credentials)
-./awsrunas.ps1 my-account
-
-# Export to environment variables (copy and paste output)
-./awsrunas.ps1 my-account -Env
-
-# Run with aws-runas options
-./awsrunas.ps1 my-account -RunAsOptions "-a 8h -r"
-```
-
-### Bash Version
+**Store credentials:**
 ```bash
-# See script help
-./awsrunas.sh --help
+# Windows
+.\awsrunas.ps1 my-prod-account
 
-# Setup ~/.aws/credentials file
-./awsrunas.sh my-account
-
-# Export to current shell environment
-eval $(./awsrunas.sh my-account --env)
-
-# Run with aws-runas options
-./awsrunas.sh my-account -o "-a 8h -r"
-```
-
-## Command Line Arguments
-
-| Argument | Python | PowerShell | Bash | Description |
-|----------|--------|------------|------|-------------|
-| Profile | `profile` | `Profile` | `profile` | AWS account profile name (required) |
-| Environment Export | `-e, --env` | `-Env` | `-e, --env` | Export credentials as environment variables instead of storing to file |
-| RunAs Options | `-o, --run-as-options` | `-RunAsOptions` | `-o, --run-as-options` | Additional options to pass to aws-runas command |
-| Help | `-h, --help` | `-?` | `-h, --help` | Show help message |
-
-## Examples
-
-### Store credentials to AWS credentials file:
-```bash
-# Python
-awsrunas my-prod-account
-
-# PowerShell  
-./awsrunas.ps1 my-prod-account
-
-# Bash
+# Linux/macOS
 ./awsrunas.sh my-prod-account
+
+# Python (any platform)
+python3 awsrunas.py my-prod-account
 ```
 
-### Export to environment variables:
+**Export to environment:**
 ```bash
-# Python
-eval $(awsrunas -e my-prod-account)
+# Windows (copy and paste output)
+.\awsrunas.ps1 my-prod-account -Env
 
-# PowerShell (manual export)
-./awsrunas.ps1 my-prod-account -Env
-# Then copy and paste the output
-
-# Bash
+# Linux/macOS
 eval $(./awsrunas.sh my-prod-account --env)
+
+# Python
+eval $(python3 awsrunas.py my-prod-account --env)
 ```
 
-### Use with aws-runas options:
+**With aws-runas options:**
 ```bash
-# Python - assume role for 8 hours with refresh
-awsrunas my-account -o "-a 8h -r"
-
-# PowerShell - same functionality
-./awsrunas.ps1 my-account -RunAsOptions "-a 8h -r"
-
-# Bash - same functionality  
-./awsrunas.sh my-account -o "-a 8h -r"
+# Assume role for 8 hours with refresh
+.\awsrunas.ps1 my-account -RunAsOptions "-a 8h -r"     # Windows
+./awsrunas.sh my-account -o "-a 8h -r"                 # Linux/macOS  
+python3 awsrunas.py my-account -o "-a 8h -r"           # Python
 ```
 
-## Platform Compatibility
+## Optional: Add to PATH
 
-| Feature | Python | PowerShell | Bash |
-|---------|--------|------------|------|
-| Windows | ✅ | ✅ | ✅ (WSL/Git Bash) |
-| macOS | ✅ | ✅ | ✅ |
-| Linux | ✅ | ✅ | ✅ |
-| Dependencies | python-dateutil | None (built-in) | jq |
-| JSON Parsing | Built-in | Built-in | jq |
-| Date Calculation | python-dateutil | Built-in | Basic (date command) |
+**Windows:**
+```powershell
+# Copy to PowerShell Scripts directory
+$scriptsPath = "$env:USERPROFILE\Documents\PowerShell\Scripts"
+New-Item -Path $scriptsPath -Type Directory -Force
+Move-Item awsrunas.ps1 $scriptsPath
+# Then use: awsrunas my-account
+```
 
-## Notes
+**Linux/macOS:**
+```bash
+# Symlink to local bin
+ln -s $(pwd)/awsrunas.sh ~/.local/bin/awsrunas
+# or for Python
+ln -s $(pwd)/awsrunas.py ~/.local/bin/awsrunas
+# Then use: awsrunas my-account
+```
 
-- All versions create the `~/.aws` directory automatically if it doesn't exist
-- The PowerShell version works cross-platform with PowerShell Core 6+
-- The Bash version provides basic time calculation for session duration
-- Credentials are stored in the `[default]` profile section
-- Environment variable export allows temporary credential usage without modifying files
+That's it! Choose your preferred script and start using AWS credentials easily.
